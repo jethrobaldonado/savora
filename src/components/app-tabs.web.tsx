@@ -7,6 +7,7 @@ import {
   TabListProps,
 } from 'expo-router/ui';
 import { SymbolView } from 'expo-symbols';
+import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, useColorScheme, View, StyleSheet } from 'react-native';
 
@@ -25,6 +26,16 @@ export default function AppTabs() {
           <TabTrigger name="home" href="/" asChild>
             <TabButton>Home</TabButton>
           </TabTrigger>
+          <Pressable
+            style={({ pressed }) => [styles.newRecipeButton, pressed && styles.pressed]}
+            onPress={() => router.push('/new-recipe')}>
+            <SymbolView
+              name={{ ios: 'plus', web: 'add' }}
+              size={16}
+              tintColor="#ffffff"
+            />
+            <ThemedText style={styles.newRecipeButtonText}>New Recipe</ThemedText>
+          </Pressable>
           <TabTrigger name="explore" href="/explore" asChild>
             <TabButton>Explore</TabButton>
           </TabTrigger>
@@ -112,5 +123,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.one,
     marginLeft: Spacing.three,
+  },
+  newRecipeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    backgroundColor: '#208AEF',
+    borderRadius: Spacing.three,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    marginHorizontal: Spacing.two,
+  },
+  newRecipeButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
