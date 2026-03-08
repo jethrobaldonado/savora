@@ -18,25 +18,12 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useSavoraStore } from '@/store';
 import type { Ingredient, MethodStep } from '@/store/types';
+import { CATEGORIES, type CategoryId } from '@/constants/categories';
 
 // ─── Types & constants ────────────────────────────────────────────────────────
 
 const PRIMARY = '#208AEF';
 const TOTAL_STEPS = 3;
-
-const CATEGORIES = [
-  { id: 'bread',        label: 'Bread',        emoji: '🍞' },
-  { id: 'ferments',     label: 'Ferments',     emoji: '🫙' },
-  { id: 'sauce',        label: 'Sauce',        emoji: '🥣' },
-  { id: 'dessert',      label: 'Dessert',      emoji: '🍮' },
-  { id: 'meat',         label: 'Meat',         emoji: '🍖' },
-  { id: 'fish',         label: 'Fish',         emoji: '🐟' },
-  { id: 'beverage',     label: 'Beverage',     emoji: '🍵' },
-  { id: 'experimental', label: 'Experimental', emoji: '⚗️' },
-  { id: 'other',        label: 'Other',        emoji: '🍴' },
-] as const;
-
-type CategoryId = (typeof CATEGORIES)[number]['id'];
 
 let _id = 0;
 function uid() { return String(++_id); }

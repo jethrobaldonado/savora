@@ -13,109 +13,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { CategoryFilterBar } from '@/components/explore/category-filter';
+import { RecipeCard } from '@/components/explore/recipe-card';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { type CategoryFilter } from '@/constants/categories';
 import { useTheme } from '@/hooks/use-theme';
 import { useSavoraStore } from '@/store';
-import type { Recipe } from '@/store/types';
+import { formatDate } from '@/utils/format';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PRIMARY = '#208AEF';
-
-const CATEGORIES = [
-  { id: 'all',          label: 'All',          emoji: '' },
-  { id: 'bread',        label: 'Bread',        emoji: '🍞' },
-  { id: 'ferments',     label: 'Ferments',     emoji: '🫙' },
-  { id: 'sauce',        label: 'Sauce',        emoji: '🥣' },
-  { id: 'dessert',      label: 'Dessert',      emoji: '🍮' },
-  { id: 'meat',         label: 'Meat',         emoji: '🍖' },
-  { id: 'fish',         label: 'Fish',         emoji: '🐟' },
-  { id: 'beverage',     label: 'Beverage',     emoji: '🍵' },
-  { id: 'experimental', label: 'Experimental', emoji: '⚗️' },
-  { id: 'other',        label: 'Other',        emoji: '🍴' },
-] as const;
-
-type CategoryFilter = (typeof CATEGORIES)[number]['id'];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatDate(isoString: string): string {
-  const date     = new Date(isoString);
-  const now      = new Date();
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / 86_400_000);
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7)  return `${diffDays} days ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-// ─── Recipe card ──────────────────────────────────────────────────────────────
-
-function RecipeCard({
-  recipe,
-  trialCount,
-  lastTrialDate,
-}: {
-  recipe: Recipe;
-  trialCount: number;
-  lastTrialDate: string | null;
-}) {
-  const theme    = useTheme();
-  const category = CATEGORIES.find((c) => c.id === recipe.category);
-
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.card,
-        { backgroundColor: theme.backgroundElement },
-        pressed && styles.pressed,
-      ]}
-      onPress={() => router.push({ pathname: '/recipe/[id]', params: { id: recipe.id } })}>
-
-      <View style={styles.cardMain}>
-        <View style={styles.cardLeft}>
-          <ThemedText type="default" style={styles.cardName} numberOfLines={2}>
-            {recipe.name}
-          </ThemedText>
-
-          {category && category.id !== 'all' && (
-            <View style={[styles.categoryBadge, { backgroundColor: theme.background }]}>
-              <ThemedText type="small" themeColor="textSecondary">
-                {category.emoji} {category.label}
-              </ThemedText>
-            </View>
-          )}
-        </View>
-
-        <SymbolView
-          name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
-          size={14}
-          tintColor={theme.textSecondary}
-        />
-      </View>
-
-      <View style={styles.cardMeta}>
-        <View style={[styles.trialBadge, { backgroundColor: 'rgba(32,138,239,0.10)' }]}>
-          <ThemedText type="small" style={styles.trialBadgeText}>
-            {trialCount} trial{trialCount !== 1 ? 's' : ''}
-          </ThemedText>
-        </View>
-
-        {lastTrialDate && (
-          <ThemedText type="small" themeColor="textSecondary">
-            Last: {lastTrialDate}
-          </ThemedText>
-        )}
-
-        {recipe.tags.length > 0 && (
-          <ThemedText type="small" themeColor="textSecondary" numberOfLines={1} style={styles.tags}>
-            {recipe.tags.join(' · ')}
-          </ThemedText>
-        )}
-      </View>
-    </Pressable>
-  );
-}
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -206,31 +114,10 @@ export default function ExploreScreen() {
         </View>
 
         {/* ── Category filter ──────────────────────────────────────── */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryList}>
-          {CATEGORIES.map((cat) => {
-            const active = activeCategory === cat.id;
-            return (
-              <Pressable
-                key={cat.id}
-                style={[
-                  styles.categoryChip,
-                  active
-                    ? styles.categoryChipActive
-                    : { backgroundColor: theme.backgroundElement },
-                ]}
-                onPress={() => setActiveCategory(cat.id)}>
-                <ThemedText
-                  type="small"
-                  style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>
-                  {cat.emoji ? `${cat.emoji} ${cat.label}` : cat.label}
-                </ThemedText>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        <CategoryFilterBar
+          activeCategory={activeCategory}
+          onSelect={setActiveCategory}
+        />
 
         {/* ── Recipe list ──────────────────────────────────────────── */}
         {filtered.length > 0 ? (
@@ -304,52 +191,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
   },
 
-  // Category filter
-  categoryList: { gap: Spacing.two, paddingBottom: Spacing.one },
-  categoryChip: {
-    borderRadius:     20,
-    paddingHorizontal: Spacing.three,
-    paddingVertical:  Spacing.one,
-  },
-  categoryChipActive:     { backgroundColor: PRIMARY },
-  categoryChipText:       { fontWeight: '500' },
-  categoryChipTextActive: { color: '#ffffff' },
-
   // Recipe list
   list: { gap: Spacing.two },
-
-  // Recipe card
-  card: {
-    borderRadius: Spacing.three,
-    padding:      Spacing.three,
-    gap:          Spacing.two,
-  },
-  cardMain: {
-    flexDirection: 'row',
-    alignItems:    'flex-start',
-    gap:           Spacing.two,
-  },
-  cardLeft: { flex: 1, gap: Spacing.one },
-  cardName: { fontWeight: '600', fontSize: 16, lineHeight: 22 },
-  categoryBadge: {
-    alignSelf:        'flex-start',
-    borderRadius:     20,
-    paddingHorizontal: Spacing.two,
-    paddingVertical:  2,
-  },
-  cardMeta: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:           Spacing.two,
-    flexWrap:      'wrap',
-  },
-  trialBadge: {
-    borderRadius:     20,
-    paddingHorizontal: Spacing.two,
-    paddingVertical:  2,
-  },
-  trialBadgeText: { color: PRIMARY, fontWeight: '600' },
-  tags:           { flex: 1 },
 
   // Empty state
   emptyState: {

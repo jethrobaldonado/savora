@@ -10,51 +10,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { OutcomeBadge, OUTCOME_LABELS, OUTCOME_TEXT_COLORS } from '@/components/recipe/outcome-badge';
+import { TrialCard } from '@/components/recipe/trial-card';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useSavoraStore } from '@/store';
-import type { OutcomeId } from '@/store/types';
+import { formatDate } from '@/utils/format';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PRIMARY = '#208AEF';
 const ACCENT  = '#34C759';
-
-const OUTCOME_LABELS: Record<OutcomeId, string> = {
-  'too-early':  '⏳ Too early',
-  'promising':  '✨ Promising',
-  'needs-work': '🔧 Needs work',
-  'good':       '👍 Good',
-  'nailed-it':  '🏆 Nailed it',
-};
-
-const OUTCOME_COLORS: Record<OutcomeId, string> = {
-  'too-early':  'rgba(255,149,0,0.15)',
-  'promising':  'rgba(32,138,239,0.12)',
-  'needs-work': 'rgba(255,59,48,0.12)',
-  'good':       'rgba(52,199,89,0.12)',
-  'nailed-it':  'rgba(175,82,222,0.12)',
-};
-
-const OUTCOME_TEXT_COLORS: Record<OutcomeId, string> = {
-  'too-early':  '#FF9500',
-  'promising':  '#208AEF',
-  'needs-work': '#FF3B30',
-  'good':       '#34C759',
-  'nailed-it':  '#AF52DE',
-};
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatDate(isoString: string): string {
-  const date     = new Date(isoString);
-  const now      = new Date();
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / 86_400_000);
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7)  return `${diffDays} days ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -221,57 +187,7 @@ export default function RecipeScreen() {
             {trials.length > 0 ? (
               <View style={styles.trialList}>
                 {trials.map((trial) => (
-                  <View
-                    key={trial.id}
-                    style={[styles.trialCard, { backgroundColor: theme.backgroundElement }]}>
-
-                    <View style={styles.trialCardHeader}>
-                      <ThemedText type="smallBold">Trial #{trial.trialNumber}</ThemedText>
-                      <ThemedText type="small" themeColor="textSecondary">
-                        {formatDate(trial.createdAt)}
-                      </ThemedText>
-                    </View>
-
-                    {trial.outcome && (
-                      <View style={[styles.outcomePill, { backgroundColor: OUTCOME_COLORS[trial.outcome] }]}>
-                        <ThemedText
-                          type="small"
-                          style={{ color: OUTCOME_TEXT_COLORS[trial.outcome], fontWeight: '600' }}>
-                          {OUTCOME_LABELS[trial.outcome]}
-                        </ThemedText>
-                      </View>
-                    )}
-
-                    {trial.changes.trim().length > 0 && (
-                      <View style={styles.trialField}>
-                        <ThemedText type="small" style={styles.trialFieldLabel}>CHANGES</ThemedText>
-                        <ThemedText type="small" themeColor="textSecondary">
-                          {trial.changes}
-                        </ThemedText>
-                      </View>
-                    )}
-
-                    {trial.notes.trim().length > 0 && (
-                      <View style={styles.trialField}>
-                        <ThemedText type="small" style={styles.trialFieldLabel}>NOTES</ThemedText>
-                        <ThemedText type="small" themeColor="textSecondary">
-                          {trial.notes}
-                        </ThemedText>
-                      </View>
-                    )}
-
-                    {trial.timer && (
-                      <View style={[styles.timerRow, { backgroundColor: theme.background }]}>
-                        <ThemedText type="small" themeColor="textSecondary">
-                          ⏱ {trial.timer.label}
-                        </ThemedText>
-                        <ThemedText type="small" style={{ color: PRIMARY, fontWeight: '600' }}>
-                          {trial.timer.hours > 0 ? `${trial.timer.hours}h ` : ''}
-                          {trial.timer.minutes > 0 ? `${trial.timer.minutes}m` : ''}
-                        </ThemedText>
-                      </View>
-                    )}
-                  </View>
+                  <TrialCard key={trial.id} trial={trial} />
                 ))}
               </View>
             ) : (
@@ -385,32 +301,6 @@ const styles = StyleSheet.create({
 
   // Trial history
   trialList: { gap: Spacing.two },
-  trialCard: {
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
-    gap: Spacing.three,
-  },
-  trialCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  outcomePill: {
-    alignSelf: 'flex-start',
-    borderRadius: 20,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 3,
-  },
-  trialField:      { gap: 4 },
-  trialFieldLabel: { fontSize: 10, letterSpacing: 0.5, fontWeight: '600', opacity: 0.5 },
-  timerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.one,
-  },
 
   // Empty
   emptyTrials: {
